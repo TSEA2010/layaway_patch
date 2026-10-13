@@ -21,20 +21,20 @@
 					:class="[
 						'lg:col-span-2 flex flex-col min-h-0',
 						isSmallMobile ? 'gap-1' : 'gap-1.5',
-						isMobileView ? 'overflow-visible' : 'overflow-hidden',
+						isMobileView ? 'overflow-visible' : 'overflow-y-auto pr-1',
 					]"
 					:style="{ maxHeight: isMobileView ? 'none' : dynamicLeftColumnHeight }"
 				>
 					<!-- Layaway Order Details & Promised Collection Date -->
 					<div
 						v-if="isLayawayPayment && props.layawayOrder"
-						class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 shadow-sm space-y-2"
+						class="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-3 shadow-sm space-y-2 shrink-0"
 					>
 						<div class="flex items-center justify-between border-b border-emerald-100 pb-2">
 							<div class="flex items-center gap-1.5 flex-wrap">
 								<span class="text-xs font-black text-emerald-900 font-mono">{{ props.layawayOrder?.sales_order }}</span>
 								<span v-if="props.layawayOrder?.is_overdue" class="text-[10px] font-black bg-rose-600 text-white px-2 py-0.5 rounded-full animate-pulse">
-									⚠️ OVERDUE ({{ props.layawayOrder?.days_overdue }} days)
+									OVERDUE ({{ props.layawayOrder?.days_overdue }} days)
 								</span>
 								<span v-else class="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full">
 									Active Layaway
@@ -75,24 +75,38 @@
 						</div>
 					</div>
 
-					<!-- Installment & Payment History Timeline (Scrollable) -->
+					<!-- Installment & Payment History Timeline (Scrollable & Collapsible) -->
 					<div
 						v-if="isLayawayPayment && props.layawayOrder?.payment_history && props.layawayOrder.payment_history.length > 0"
-						class="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col flex-1 min-h-[140px] max-h-[220px]"
+						class="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col shrink-0"
 					>
-						<div class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+						<div
+							@click="showPaymentHistory = !showPaymentHistory"
+							class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between cursor-pointer select-none hover:bg-slate-100/70 transition-colors"
+						>
 							<span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
 								<svg class="w-3.5 h-3.5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
 								Payment / Installment History
 							</span>
-							<span class="text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full">
-								{{ props.layawayOrder?.payment_history?.length || 0 }} payments
-							</span>
+							<div class="flex items-center gap-1.5">
+								<span class="text-[10px] font-bold text-slate-500 bg-slate-200 px-1.5 py-0.5 rounded-full">
+									{{ props.layawayOrder?.payment_history?.length || 0 }} payments
+								</span>
+								<svg
+									class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200"
+									:class="{ 'rotate-180': !showPaymentHistory }"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								</svg>
+							</div>
 						</div>
 
-						<div class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1.5">
+						<div v-show="showPaymentHistory" class="overflow-y-auto divide-y divide-slate-100 p-2 space-y-1.5 max-h-36">
 							<div
 								v-for="(pmt, idx) in props.layawayOrder?.payment_history || []"
 								:key="pmt.name || idx"
@@ -114,24 +128,38 @@
 						</div>
 					</div>
 
-					<!-- Layaway Item Revisions / Changes History -->
+					<!-- Layaway Item Revisions / Changes History (Scrollable & Collapsible) -->
 					<div
 						v-if="isLayawayPayment && props.layawayOrder?.revisions && props.layawayOrder.revisions.length > 0"
-						class="bg-white rounded-xl border border-amber-200 overflow-hidden flex flex-col flex-1 min-h-[100px] max-h-[160px]"
+						class="bg-white rounded-xl border border-amber-200 overflow-hidden flex flex-col shrink-0"
 					>
-						<div class="px-3 py-1.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between">
+						<div
+							@click="showRevisions = !showRevisions"
+							class="px-3 py-1.5 bg-amber-50 border-b border-amber-200 flex items-center justify-between cursor-pointer select-none hover:bg-amber-100/70 transition-colors"
+						>
 							<span class="text-xs font-bold text-amber-900 flex items-center gap-1.5">
 								<svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 								</svg>
 								Item Revisions / Changes
 							</span>
-							<span class="text-[10px] font-bold text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded-full">
-								{{ props.layawayOrder?.revisions?.length || 0 }} revision(s)
-							</span>
+							<div class="flex items-center gap-1.5">
+								<span class="text-[10px] font-bold text-amber-900 bg-amber-200 px-1.5 py-0.5 rounded-full">
+									{{ props.layawayOrder?.revisions?.length || 0 }} revision(s)
+								</span>
+								<svg
+									class="w-3.5 h-3.5 text-amber-700 transition-transform duration-200"
+									:class="{ 'rotate-180': !showRevisions }"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								</svg>
+							</div>
 						</div>
 
-						<div class="flex-1 overflow-y-auto divide-y divide-amber-100 p-2 space-y-1 text-start">
+						<div v-show="showRevisions" class="overflow-y-auto divide-y divide-amber-100 p-2 space-y-1 text-start max-h-36">
 							<div
 								v-for="rev in props.layawayOrder?.revisions || []"
 								:key="rev.name || rev.revision_no"
@@ -151,10 +179,60 @@
 						</div>
 					</div>
 
+					<!-- Customer Unallocated Advance Payments Card (if available) -->
+					<div
+						v-if="unallocatedAdvances && unallocatedAdvances.length > 0"
+						class="bg-blue-50 border border-blue-200 rounded-xl overflow-hidden flex flex-col shrink-0"
+					>
+						<div
+							@click="showAdvances = !showAdvances"
+							class="px-3 py-1.5 bg-blue-100/70 border-b border-blue-200 flex items-center justify-between cursor-pointer select-none hover:bg-blue-100 transition-colors"
+						>
+							<span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+								<svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+								</svg>
+								Unallocated Advances
+							</span>
+							<div class="flex items-center gap-1.5">
+								<span class="text-[10px] font-bold text-blue-900 bg-blue-200 px-1.5 py-0.5 rounded-full font-mono">
+									KES {{ formatCurrency(totalUnallocatedAmount) }}
+								</span>
+								<svg
+									class="w-3.5 h-3.5 text-blue-700 transition-transform duration-200"
+									:class="{ 'rotate-180': !showAdvances }"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+								</svg>
+							</div>
+						</div>
+						<div v-show="showAdvances" class="overflow-y-auto divide-y divide-blue-100 p-2 space-y-1 text-start max-h-32">
+							<div class="text-[9.5px] text-blue-700 px-0.5 pb-0.5">
+								Customer advance payments in ERPNext not attached to any order:
+							</div>
+							<div
+								v-for="adv in unallocatedAdvances"
+								:key="adv.payment_entry"
+								class="p-1.5 rounded-lg bg-white/90 border border-blue-100 text-[10.5px] flex items-center justify-between"
+							>
+								<div>
+									<span class="font-mono font-bold text-slate-800">{{ adv.payment_entry }}</span>
+									<span class="text-slate-400 text-[9px] block">{{ adv.posting_date }} • {{ adv.mode_of_payment }}</span>
+								</div>
+								<div class="text-end">
+									<span class="font-mono font-bold text-blue-800 block">KES {{ formatCurrency(adv.available_advance) }}</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
 					<!-- Delivery Date for Sales Orders -->
 					<div
 						v-if="isSalesOrder"
-						class="bg-orange-50 border border-orange-200 rounded-lg p-2"
+						class="bg-orange-50 border border-orange-200 rounded-lg p-2 shrink-0"
 					>
 						<div class="flex items-center gap-2">
 							<svg
@@ -184,9 +262,9 @@
 
 					<!-- Sales Person Selection (Compact) -->
 					<div
-						v-if="settingsStore.enableSalesPersons"
+						v-if="settingsStore.enableSalesPersons && !isLayawayPayment"
 						:class="[
-							'rounded-lg p-2',
+							'rounded-lg p-2 shrink-0',
 							!isSalesPersonValid
 								? 'bg-red-50 border-2 border-red-300'
 								: 'bg-purple-50 border border-purple-200',
@@ -1381,9 +1459,9 @@
 										: 'border-emerald-300 bg-emerald-50 hover:border-emerald-500 hover:bg-emerald-100 text-emerald-700',
 								]"
 							>
-								<span :class="isSmallMobile ? 'text-xs' : 'text-sm lg:text-lg'"
-									>💳</span
-								>
+								<svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+								</svg>
 								<span class="truncate">{{ __("Credit Balance") }}</span>
 								<span
 									v-if="getMethodTotal('Customer Credit') > 0"
@@ -1418,9 +1496,9 @@
 											: 'border-gray-200 bg-white hover:border-blue-400 hover:bg-blue-50 text-gray-700',
 									]"
 								>
-									<span :class="isSmallMobile ? 'text-xs' : 'text-sm lg:text-lg'"
-										>🧾</span
-									>
+									<svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+									</svg>
 									<span class="whitespace-nowrap font-bold">{{
 										__(acc.account_name || acc.name)
 									}}</span>
@@ -1456,7 +1534,7 @@
 						>
 							<div class="flex items-center justify-between mb-2">
 								<span class="font-extrabold text-purple-950 text-sm flex items-center gap-1.5">
-									<span>🎫 Credit Note Verification (ERPNext Return Audit)</span>
+									<span>Credit Note Verification (ERPNext Return Audit)</span>
 								</span>
 								<span class="px-2 py-0.5 text-[10px] font-bold bg-purple-200 text-purple-900 rounded-full">System Validation Required</span>
 							</div>
@@ -1488,7 +1566,7 @@
 								<div v-if="creditNoteValidationResult.success" class="flex flex-col gap-2.5 w-full">
 									<div class="flex items-center justify-between">
 										<div class="flex items-center gap-1.5">
-											<span class="text-emerald-900 font-extrabold">✅ Return Voucher: <strong>{{ creditNoteValidationResult.credit_note_no }}</strong></span>
+											<span class="text-emerald-900 font-extrabold">Return Voucher: <strong>{{ creditNoteValidationResult.credit_note_no }}</strong></span>
 											<span class="text-[10px] bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded font-mono">({{ creditNoteValidationResult.voucher_type }})</span>
 										</div>
 										<div class="text-[11px] text-emerald-800">
@@ -1531,7 +1609,7 @@
 									</div>
 								</div>
 								<div v-else class="text-red-900 font-extrabold">
-									❌ {{ creditNoteValidationResult.error || 'Invalid Credit Note Number or Zero Balance in ERPNext' }}
+									{{ creditNoteValidationResult.error || 'Invalid Credit Note Number or Zero Balance in ERPNext' }}
 								</div>
 							</div>
 						</div>
@@ -2557,6 +2635,35 @@ const show = computed({
 });
 
 const showMPesaModal = ref(false);
+const showRevisions = ref(true);
+const showPaymentHistory = ref(true);
+const showAdvances = ref(true);
+const unallocatedAdvances = ref([]);
+const loadingAdvances = ref(false);
+
+const totalUnallocatedAmount = computed(() => {
+	return (unallocatedAdvances.value || []).reduce((sum, adv) => sum + Number(adv.available_advance || 0), 0);
+});
+
+async function fetchUnallocatedAdvances() {
+	const cust = props.layawayOrder?.customer || (typeof props.customer === 'object' ? props.customer?.name : props.customer);
+	if (!cust) {
+		unallocatedAdvances.value = [];
+		return;
+	}
+	loadingAdvances.value = true;
+	try {
+		const res = await call("pos_next_patch.api.deposit.get_unallocated_customer_advances", {
+			customer: cust,
+			company: props.company
+		});
+		unallocatedAdvances.value = res || [];
+	} catch (e) {
+		unallocatedAdvances.value = [];
+	} finally {
+		loadingAdvances.value = false;
+	}
+}
 
 watch(
 	() => props.modelValue,
@@ -2567,6 +2674,7 @@ watch(
 			creditNoteSearchNo.value = "";
 			creditNoteValidationResult.value = null;
 			showKRAModal.value = false;
+			fetchUnallocatedAdvances();
 		}
 	}
 );
@@ -3194,8 +3302,8 @@ const totalSalesAllocation = computed(() => {
 
 // Computed: Validation - sales person is required when enabled and online
 const isSalesPersonValid = computed(() => {
-	// If sales persons feature is disabled, always valid
-	if (!settingsStore.enableSalesPersons) {
+	// If sales persons feature is disabled or paying layaway installment, always valid
+	if (!settingsStore.enableSalesPersons || isLayawayPayment.value) {
 		return true;
 	}
 	// Skip validation when offline — sales persons can't be fetched,
@@ -4474,21 +4582,7 @@ function getPaymentMethodInlineStyle(methodName, isSelected) {
 }
 
 function getPaymentMethodIcon(methodName, type) {
-	const raw = (methodName || "").toLowerCase();
-	if (raw.includes("loyalty") || raw.includes("point")) return "⭐";
-	if (raw.includes("wallet") || raw.includes("gift")) return "🎁";
-	if (raw.includes("mpesa") || raw.includes("m-pesa")) return "📱";
-	if (raw.includes("cash")) return "💵";
-	if (raw.includes("credit") || raw.includes("store credit")) return "📜";
-	if (raw.includes("visa") || raw.includes("mastercard") || raw.includes("card")) return "💳";
-	if (raw.includes("cheque") || raw.includes("check") || raw.includes("draft")) return "🧾";
-	if (raw.includes("wire") || raw.includes("transfer")) return "🔄";
-	if (raw.includes("kcb")) return "🏛️";
-	if (raw.includes("equity")) return "🏢";
-	if (raw.includes("co-op") || raw.includes("cooperative") || raw.includes("coop") || raw.includes("corperative")) return "🏦";
-	if (raw.includes("absa")) return "🔴";
-	if (raw.includes("dtb") || raw.includes("diamond trust")) return "💎";
-	return "🏦";
+	return "";
 }
 
 </script>
